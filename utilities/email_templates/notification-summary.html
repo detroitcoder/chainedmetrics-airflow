@@ -1,0 +1,241 @@
+<head>
+  <style type="text/css">
+    @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
+
+    /* cyrillic-ext */
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/sourcesanspro/v18/6xK3dSBYKcSV-LCoeQqfX1RYOo3qNa7lqDY.woff2) format('woff2');
+      unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+    }
+    /* cyrillic */
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/sourcesanspro/v18/6xK3dSBYKcSV-LCoeQqfX1RYOo3qPK7lqDY.woff2) format('woff2');
+      unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+    }
+    /* greek-ext */
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/sourcesanspro/v18/6xK3dSBYKcSV-LCoeQqfX1RYOo3qNK7lqDY.woff2) format('woff2');
+      unicode-range: U+1F00-1FFF;
+    }
+    /* greek */
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/sourcesanspro/v18/6xK3dSBYKcSV-LCoeQqfX1RYOo3qO67lqDY.woff2) format('woff2');
+      unicode-range: U+0370-03FF;
+    }
+    /* vietnamese */
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/sourcesanspro/v18/6xK3dSBYKcSV-LCoeQqfX1RYOo3qN67lqDY.woff2) format('woff2');
+      unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
+    }
+    /* latin-ext */
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/sourcesanspro/v18/6xK3dSBYKcSV-LCoeQqfX1RYOo3qNq7lqDY.woff2) format('woff2');
+      unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+    /* latin */
+    @font-face {
+      font-family: 'Source Sans Pro';
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/sourcesanspro/v18/6xK3dSBYKcSV-LCoeQqfX1RYOo3qOK7l.woff2) format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Source Sans Pro', Roboto, serif;
+      color: #000000;
+    }
+
+    .container {
+      max-width: 650px;
+    }
+
+    .header {
+      height: 50px;
+      display: flex;
+    }
+
+    .header > * {
+      width: 33.33%;
+    }
+
+    .dark-blue {
+      background-color: #1073b9;
+    }
+    .light-blue {
+      background-color: #33ace0;
+    }
+    .gray {
+      background-color: #e6e6e6;
+    }
+
+    .body {
+      padding: 30px 40px;
+    }
+
+    .logo {
+      width: 350px;
+      margin: 15px 0;
+    }
+
+    h2.title {
+      font-size: 30px;
+      margin: 10px 0;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .text {
+      font-size: 18px;
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    table {
+      width: 100%;
+      margin: 20px 0;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background-color: #000000;
+      color: white;
+    }
+
+    th {
+      color: white;
+    }
+
+    th,
+    td {
+      padding: 5px 10px;
+      text-align: left;
+      font-size: 16px;
+    }
+
+    tbody tr {
+      color: #000000;
+      background-color: #f2f2f2;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #e6e6e6;
+    }
+
+    tr.win td {
+      color: #18944d;
+    }
+
+    tr.lose td {
+      color: #c02f38;
+    }
+
+    .link {
+      text-decoration: underline;
+      font-size: 16px;
+      color: #1073b9 !important;
+      text-decoration: underline;
+      text-align: center;
+    }
+
+    .quote {
+      font-size: 18px;
+      background-color: #f6f6f6;
+      padding: 20px 8px;
+      margin: 25px 0 15px 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .footer {
+      background-color: #000000;
+      padding: 40px 30px 50px 30px;
+    }
+
+    .footer .text {
+      text-align: center;
+      color: white;
+    }
+
+    .footer .icons {
+      background-color: #f6f6f6;
+      color: #000000;
+      display: flex;
+      margin: 0 auto;
+      margin-top: 20px;
+      width: 100px;
+    }
+
+    .footer .icon {
+      margin: 5px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<div class="container">
+  <div class="header">
+    <div class="dark-blue"></div>
+    <div class="light-blue"></div>
+    <div class="gray"></div>
+  </div>
+
+  <div class="body">
+    <img src="cid:logo-light" alt="Logo" class="logo" />
+
+    <h2 class="title">{{title}}</h2>
+    <p class="text">
+      {{description}}
+    </p>
+    <table>
+      <thead>
+        <tr>
+          {% for th in headers %}<th>{{th}}</th> {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for tr in rows %}
+        <tr class="">
+          {% for v in tr %}
+            <td>{{v}}</td>
+          {% endfor %}
+        </tr> 
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="quote">
+      Please click
+      <a href="https://chainedmetrics.com/" class="link">here</a> if you no
+      longer wish to receive these notifications.
+    </div>
+  </div>
+
+  <div class="footer">
+    <p class="text">Chained Metrics Site | Chained Metrics Blog</p>
+    <div class="icons">
+      <a class="icon"><i class="fab fa-twitter"></i></a>
+      <a class="icon"><i class="fab fa-instagram"></i></a>
+      <a class="icon"><i class="fab fa-discord"></i></a>
+    </div>
+  </div>
+</div>
