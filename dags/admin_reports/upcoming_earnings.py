@@ -10,6 +10,7 @@ from datetime import datetime
 from utilities import send_email, email_table_template
 from utilities.contract_analyzer import issued_tokens, open_orders, setup_network, get_contracts
 
+
 def anchor_text(text, id):
 
     return f'<a href="https://chainedmetrics.com/trade/{id}" target="_blank">{text}</a>'
@@ -77,7 +78,7 @@ def lookup_upcoming_earnings_dates():
     if not pk:
         pk = BaseHook.get_connection("private_key").password
         
-    account = setup_network()
+    account = setup_network( pk )
     volumes = get_issuance_and_volume([(m['broker_address'], m['beat_address'], m['miss_address']) for m in market_list])
 
     for i, v in enumerate(volumes):
