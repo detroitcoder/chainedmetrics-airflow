@@ -1,7 +1,9 @@
-#export AIRFLOW_HOME=$HOME/chained_metrics_airflow
-export AIRFLOW__CORE__DAGS_FOLDER=$HOME/chained_metrics_airflow
+export AIRFLOW_HOME=$HOME/chained_metrics_airflow
+export AIRFLOW__CORE__DAGS_FOLDER=$HOME/chained_metrics_airflow/dags
 export AIRFLOW__CORE__SQL_ALCHEMY_CONN=sqlite:///$HOME/airflow/airflow.db
 export AIRFLOW__CORE__PLUGINS_FOLDER=$HOME/airflow/plugins
 export AIRFLOW__LOGGING__BASE_LOG_FOLDER=$HOME/airflow/logs
-export AIRFLOW__LOGGING__DAG_PR0CESSOR_MANAGER_LOG_LOCATION=$HOME/airflow/logs/dag_processor_manager/dag_processor_manager.log
-export AIRFLOW__LOGGING__CHILD_PROCESS_LOG_DIRECTORY=$HOME/airflow/logs/scheduler
+export AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=$HOME/airflow/logs/scheduler
+export AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION=$HOME/airflow/logs/dag_processor_manager/dag_processor_manager.log
+
+
