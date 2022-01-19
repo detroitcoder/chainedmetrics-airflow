@@ -1,6 +1,7 @@
 import enum
 import psycopg2
 import logging
+import os
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -8,7 +9,6 @@ from airflow.hooks.base import BaseHook
 from datetime import datetime
 from utilities import send_email, email_table_template
 from utilities.contract_analyzer import issued_tokens, open_orders, setup_network, get_contracts
-
 
 def anchor_text(text, id):
 
@@ -73,6 +73,10 @@ def lookup_upcoming_earnings_dates():
     
     kpi_list = [[anchor_text(i['metric_symbol'], i['id']), i['expected_reporting_date'], i['metric']] for i in market_list]
 
+    pk = os.getenv('PRIVATE_KEY')
+    if not pk:
+        pk = BaseHook.get_connection("private_key").password
+        
     account = setup_network()
     volumes = get_issuance_and_volume([(m['broker_address'], m['beat_address'], m['miss_address']) for m in market_list])
 

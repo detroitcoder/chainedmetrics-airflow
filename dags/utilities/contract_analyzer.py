@@ -100,9 +100,9 @@ def get_all_markets(conn):
 
     return market_dict
 
-def setup_network():
+def setup_network(pk):
 
-    account = accounts.add(os.environ['PRIVATE_KEY'])
+    account = accounts.add(pk)
     project.load('.', 'NotificationAnalysis')
     network.connect('polygon-main')
 
