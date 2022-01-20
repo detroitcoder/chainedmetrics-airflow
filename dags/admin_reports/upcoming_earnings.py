@@ -1,6 +1,7 @@
 import enum
 import psycopg2
 import logging
+import os
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -73,7 +74,11 @@ def lookup_upcoming_earnings_dates():
     
     kpi_list = [[anchor_text(i['metric_symbol'], i['id']), i['expected_reporting_date'], i['metric']] for i in market_list]
 
-    account = setup_network()
+    pk = os.getenv('PRIVATE_KEY')
+    if not pk:
+        pk = BaseHook.get_connection("private_key").password
+        
+    account = setup_network( pk )
     volumes = get_issuance_and_volume([(m['broker_address'], m['beat_address'], m['miss_address']) for m in market_list])
 
     for i, v in enumerate(volumes):
