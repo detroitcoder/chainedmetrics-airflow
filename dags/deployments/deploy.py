@@ -21,8 +21,9 @@ def deploy_market(marketType='binary'):
     logging.info(f'Connecting to network Brownie Project at {brownie_location}')
 
     account, project = setup_network(pk, brownie_location)
+    starting_gas = account.balance() / 10 ** 18
     logging.info(f'Using Account: {account.address}')
-    logging.info(f'Account Balance: {account.balance() / 10 ** 18}')
+    logging.info(f'Account Balance: {starting_gas }')
 
     #Loading the config and network after loading the config in the setup_network call
     from brownie import config, network
@@ -93,6 +94,29 @@ def deploy_market(marketType='binary'):
         ])
         logging.info("Address Updated")
 
+    ending_gas = account.balance() / 10**18
+    title = "Chained Metrics Binary KPIs Deployed And Ready to Trade"
+    description = (
+        f"{len(kpi_markets_to_deploy)} new markets were deployed in production (below). In total "
+        f"{starting_gas - ending_gas:.4f} MATIC was used in gas for this release and there is {ending_gas:.4f} "
+        f"remaining in the deployment account. These are now live. This email is for devs only"
+        f"and a second version will be used for users requesting market notifications"
+    )
+
+    headers = ['Ticker', 'KPI', 'Symbol', 'Strike', 'Period']
+    rows = [[
+        m['ticker'], m['metric'], m['beat_symbol'], m['strike_value'], m['fiscal_period']
+    ] for m in kpi_markets_to_deploy]
+
+
+    template = email_table_template(title, description, headers, rows)
+
+    email_connection = BaseHook.get_connection("email")
+    recipients = ['michael@chainedmetrics.com', 'jamal@chainedmetrics.com', 'dillon@chainedmetrics.com', 'nick@chainedmetrics.com', 'sachin@chainedmetrics.com']
+    subject = "NEW! Binary Markets Deployed"
+    text = f'There are {len(kpi_markets_to_deploy)} newly deployed binary markets'
+    send_email(recipients, email_connection.login, template, subject, text, email_connection.password)
+
 def get_binary_markets_to_deploy():
     '''
     A function that looks up binary markets to deply from the Markets database and returns a list
@@ -115,7 +139,7 @@ def get_binary_markets_to_deploy():
         cur = conn.cursor()
         cur.execute(
             """SELECT id, ticker, fiscal_period, metric, value, value_string, metric_symbol from market 
-            where (broker_address is null OR broker_address='') AND value is not null limit 1""")
+            where (broker_address is null OR broker_address='') AND value is not null""")
 
         clean_metric_list = []
         for row in cur:
