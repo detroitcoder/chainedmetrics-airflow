@@ -139,7 +139,7 @@ def get_binary_markets_to_deploy():
         cur = conn.cursor()
         cur.execute(
             """SELECT id, ticker, fiscal_period, metric, value, value_string, metric_symbol from market 
-            where (broker_address is null OR broker_address='') AND value is not null limit 1""")
+            where (broker_address is null OR broker_address='') AND value is not null""")
 
         clean_metric_list = []
         for row in cur:
