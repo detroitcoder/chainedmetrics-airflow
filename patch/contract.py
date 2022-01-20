@@ -6,6 +6,7 @@ import os
 import re
 import time
 import warnings
+import logging
 from pathlib import Path
 from textwrap import TextWrapper
 from threading import get_ident  # noqa
@@ -392,10 +393,10 @@ class ContractContainer(_ContractBase):
                 # Wait for contract to be recognized by etherscan
                 # This takes a few seconds after the contract is deployed
                 # After 10 loops we throw with the API result message (includes address)
-                if i >= 10:
-                    raise ValueError(f"API request failed with: {data['result']}")
+                if i >= 50:
+                    raise ValueError(f"API request failed with: {data}")
                 elif i == 0 and not silent:
-                    print(f"Waiting for {url} to process contract...")
+                    logging.info(f"Waiting for {url} to process contract\ndata: {data}\nparams: {params_tx}")
                 i += 1
                 time.sleep(10)
 
@@ -1744,7 +1745,15 @@ def _inputs(abi: Dict) -> str:
 
 
 def _verify_deployed_code(address: str, expected_bytecode: str, language: str) -> bool:
-    actual_bytecode = web3.eth.get_code(address).hex()[2:]
+    actual_bytecode = ""
+    attempts = 0
+    while not actual_bytecode and attempts < 8:
+        actual_bytecode = web3.eth.get_code(address).hex()[2:]
+        if not actual_bytecode:
+            logging.info('Recieved Empty actual_bytecode. Retrying')
+            time.sleep(15)
+            attempts += 1
+
     expected_bytecode = remove_0x_prefix(expected_bytecode)  # type: ignore
 
     if expected_bytecode.startswith("730000000000000000000000000000000000000000"):
