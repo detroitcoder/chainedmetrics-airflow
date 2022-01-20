@@ -90,6 +90,22 @@ def issued_tokens(token_address):
     return transaction_history
     
 
+def get_erc20_contract(address):
+    '''
+    Returns an ERC20 contract for the corresponding address
+
+    Args:
+        address (string): The contract address
+
+    Returns:
+        erc20 (brownie.Contract): An instance of a bronwie contract
+    '''
+    erc20_abi_location = os.path.join(os.path.dirname(__file__), 'erc20_abi.json')
+    with open(erc20_abi_location) as fil:
+        erc20_abi = json.load(fil)
+
+    return Contract.from_abi('Broker', address, erc20_abi)
+
 def get_all_markets(conn):
 
     cursor = conn.cursor()
@@ -100,13 +116,16 @@ def get_all_markets(conn):
 
     return market_dict
 
-def setup_network(pk):
+def setup_network(pk, project_location='.'):
 
     account = accounts.add(pk)
-    project.load('.', 'NotificationAnalysis')
     network.connect('polygon-main')
+    p = project.load(project_location, 'ChainedMetrics')
 
-    return account
+    if project_location != '.':
+        project.ChainedMetrics.load_config()
+
+    return account, p
 
 def get_contracts(broker_address, beat_address, miss_address, market='binary', broker_abi=None, erc20_abi=None):
 
