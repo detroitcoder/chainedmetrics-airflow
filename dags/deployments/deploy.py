@@ -93,7 +93,7 @@ def deploy_market(marketType='binary'):
 
         logging.info("Market Created. Granting Broker Role")
         granting_attempts = 3
-        while granting_attempts > 0:
+        while granting_attempts >= 0:
             try:
                 beat.grantRole(beat.BROKER_ROLE(), broker.address, {'from': account})
                 miss.grantRole(miss.BROKER_ROLE(), broker.address, {'from': account})
@@ -331,7 +331,7 @@ def deploy_contract(contract, *args, retry=3):
     Handles retry logic for contract deploys up to 3 times
     '''
 
-    while retry > 0:
+    while retry >= 0:
         try:
             instance = contract.deploy(*args, verify_source=True)
             if isinstance(instance, TransactionReceipt):
@@ -344,6 +344,8 @@ def deploy_contract(contract, *args, retry=3):
             logging.info(f'Retrying retry={retry}')
             if retry == 0:
                 raise
+
+            retry -= 1
 
 def email_failure(context):
 
