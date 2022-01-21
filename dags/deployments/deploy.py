@@ -344,7 +344,7 @@ def email_failure(context):
 
 dag = DAG(
     dag_id='deploy_binary_markets',
-    schedule_interval='0 18 * * *',
+    schedule_interval='0 2 * * *',
     start_date=datetime(2021, 1, 1),
     catchup=False,
     tags=["deployment", "admin"],
