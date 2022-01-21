@@ -43,8 +43,8 @@ def deploy_market(marketType='binary'):
 
         logging.info(f'Deploying market for {market["ticker"]} | {market["fiscal_period"]}| {market["metric"]}')
         
-        beat = deploy_contract(account, project.MetricToken, market['beat_description'], market['beat_symbol'])
-        miss = deploy_contract(account, project.MetricToken, market['miss_description'], market['miss_symbol'])
+        beat = deploy_contract(project.MetricToken, market['beat_description'], market['beat_symbol'], {'from': account})
+        miss = deploy_contract(project.MetricToken, market['miss_description'], market['miss_symbol'], {'from': account})
 
         logging.info('Deployed tokens now deploying Broker')
         details = (
@@ -62,7 +62,6 @@ def deploy_market(marketType='binary'):
         logging.info(details)
         if marketType == 'binary':
             broker = deploy_contract(
-                account,
                 project.BinaryMarket,
                 market['strike_value'],
                 market['url'],
@@ -72,11 +71,11 @@ def deploy_market(marketType='binary'):
                 config['networks'][network.show_active()]['link_token'],
                 config['networks'][network.show_active()]['cmetric'],
                 beat.address,
-                miss.address
+                miss.address,
+                {'from': account},
             )
         elif marketType == 'scalar':
             broker = deploy_contract(
-                account,
                 project.ScalarMarket,
                 market['high'],
                 market['low'],
@@ -87,7 +86,8 @@ def deploy_market(marketType='binary'):
                 config['networks'][network.show_active()]['link_token'],
                 config['networks'][network.show_active()]['cmetric'],
                 beat.address,
-                miss.address
+                miss.address,
+                {'from': account}
             )
 
         logging.info("Market Created. Granting Broker Role")
@@ -326,14 +326,15 @@ def format_description(ticker, fiscal_period, metric, strike_string, outcome):
         strike_string=strike_string
     )
 
-def deploy_contract(account, contract, *args, retry=3):
+def deploy_contract(contract, *args, retry=3):
     '''
     Handles retry logic for contract deploys up to 3 times
     '''
 
     while retry >= 0:
         try:
-            instance = account.deploy(contract, *args, publish_source=True, gas_price=GasNowScalingStrategy(max_speed="fast", increment=1.2))
+            args[-1]['gas_price'] = GasNowScalingStrategy(max_speed="fast", increment=1.2)
+            instance = contract.deploy(*args, publish_source=True)
             if isinstance(instance, TransactionReceipt):
                 logging.error(f"Contract not deployed and recieved a receipt with this info: {instance.info()}")
                 raise Exception('Recieved a Transaction Receipt Error')
