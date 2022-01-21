@@ -1,7 +1,7 @@
 from decimal import InvalidOperation
 import psycopg2
 import logging
-import os
+import time
 from utilities import send_email, email_table_template
 from utilities.contract_analyzer import setup_network, get_erc20_contract
 from datetime import datetime
@@ -46,7 +46,19 @@ def deploy_market(marketType='binary'):
         miss = deploy_contract(project.MetricToken, market['miss_description'], market['miss_symbol'], {'from': account})
 
         logging.info('Deployed tokens now deploying Broker')
-
+        details = (
+                market['strike_value'],
+                market['url'],
+                config['networks'][network.show_active()]['oracle'],
+                config['networks'][network.show_active()]['jobId'],
+                config['networks'][network.show_active()]['fee_decimals'],
+                config['networks'][network.show_active()]['link_token'],
+                config['networks'][network.show_active()]['cmetric'],
+                beat.address,
+                miss.address,
+                {'from': account}
+        )
+        logging.info(details)
         if marketType == 'binary':
             broker = project.BinaryMarket.deploy(
                 market['strike_value'],
@@ -58,7 +70,8 @@ def deploy_market(marketType='binary'):
                 config['networks'][network.show_active()]['cmetric'],
                 beat.address,
                 miss.address,
-                {'from': account}
+                {'from': account},
+                publish_source=True
             )
         elif marketType == 'scalar':
             broker = project.ScalarMarket.deploy(
@@ -81,12 +94,28 @@ def deploy_market(marketType='binary'):
         logging.info("Broker role is granted")
 
         logging.info("Transfering .001 LINK to the broker to pay for lookup fees")
-        link_contract = get_erc20_contract(config['networks'][network.show_active()]['link_token'])
-        link_contract.transfer(
-            broker.address, 
-            10 ** (18 - config['networks'][network.show_active()]['fee_decimals']),
-            {'from': account}
-        )
+        
+        # Occasionally the nonce is too low and the transaction needs to be retried
+        transfer_attempts = 3
+        while transfer_attempts > 0:
+            link_contract = get_erc20_contract(config['networks'][network.show_active()]['link_token'])
+            try:
+                link_contract.transfer(
+                    broker.address, 
+                    10 ** (18 - config['networks'][network.show_active()]['fee_decimals']),
+                    {'from': account}
+                )
+                break
+            except ValueError as e:
+                if transfer_attempts == 1:
+                    logging.exception("Raising Link Transfer Exception after multiple attempts")
+                    raise
+                elif 'nonce too low' in str(e):
+                    logging.error(f'Nonce too low on Link transfer. Sleeping 15 seconds. Attempt: {transfer_attempts}')
+                    transfer_attempts -= 1
+                    time.sleep(15)
+                else:
+                    raise  
 
         logging.info("Updating Broker Address in Database")
         update_broker_addresses([
@@ -298,12 +327,28 @@ def deploy_contract(contract, *args, retry=3):
             if retry == 0:
                 raise
 
+def email_failure(context):
+
+    title = "Failure Deploying Binary KPIs"
+    description = f"There was a failure deploying KPIs and the job may need to be restarted. Please go to Airflow to restart"
+    headers = ['Context', 'Details']
+    rows = [[k, str(v)] for k, v in context.items()]
+    template = email_table_template(title, description, headers, rows)
+
+    email_connection = BaseHook.get_connection("email")
+    recipients = ['michael@chainedmetrics.com', 'jamal@chainedmetrics.com', 'dillon@chainedmetrics.com', 'nick@chainedmetrics.com', 'sachin@chainedmetrics.com']
+    subject = "Failure Deploying Binary Markets"
+    text = f'Failure Deploying Binary Markets'
+    send_email(recipients, email_connection.login, template, subject, text, email_connection.password)
+
+
 dag = DAG(
     dag_id='deploy_binary_markets',
     schedule_interval='0 18 * * *',
     start_date=datetime(2021, 1, 1),
     catchup=False,
-    tags=["deployment", "admin"]
+    tags=["deployment", "admin"],
+    on_failure_callback=email_failure,
 )
 
 python_report_operator = PythonOperator(
