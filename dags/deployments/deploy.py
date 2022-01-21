@@ -29,6 +29,7 @@ def deploy_market(marketType='binary'):
     #Loading the config and network after loading the config in the setup_network call
     from brownie import config, network
     from brownie.network.transaction import TransactionReceipt
+    from brownie.network.gas.strategies import GasNowScalingStrategy
 
     logging.info(f'Deploying {marketType} market type')
     if marketType == 'binary':
@@ -95,8 +96,8 @@ def deploy_market(marketType='binary'):
         granting_attempts = 3
         while granting_attempts >= 0:
             try:
-                beat.grantRole(beat.BROKER_ROLE(), broker.address, {'from': account})
-                miss.grantRole(miss.BROKER_ROLE(), broker.address, {'from': account})
+                beat.grantRole(beat.BROKER_ROLE(), broker.address, {'from': account}, gas_price=GasNowScalingStrategy(initial_speed="fast", increment=1.2))
+                miss.grantRole(miss.BROKER_ROLE(), broker.address, {'from': account}, gas_price=GasNowScalingStrategy(initial_speed="fast", increment=1.2))
                 break
             except Exception as e:
                 logging.exception(f"Error granting permissions: {str(e)}")
@@ -117,7 +118,8 @@ def deploy_market(marketType='binary'):
                 link_contract.transfer(
                     broker.address, 
                     10 ** (18 - config['networks'][network.show_active()]['fee_decimals']),
-                    {'from': account}
+                    {'from': account},
+                    gas_price=GasNowScalingStrategy(max_speed="fast", increment=1.2)
                 )
                 break
             except ValueError as e:
@@ -333,7 +335,7 @@ def deploy_contract(contract, *args, retry=3):
 
     while retry >= 0:
         try:
-            instance = contract.deploy(*args, verify_source=True)
+            instance = contract.deploy(*args, verify_source=True, gas_price=GasNowScalingStrategy(max_speed="fast", increment=1.2))
             if isinstance(instance, TransactionReceipt):
                 logging.error(f"Contract not deployed and recieved a receipt with this info: {instance.info()}")
                 raise Exception('Recieved a Transaction Receipt Error')
