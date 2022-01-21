@@ -1,0 +1,8 @@
+This patch adds retry logic for the contract deployment. This file needs to replace the 
+deployed module at below location:
+
+/site-packages/brownie/network/contract.py
+
+
+It add retry logic to the polyscan API which can take up to 5 minutes to see a conifrmed transaction
+and retry the actual code lookup agains the node operator (infura or alchemy)
