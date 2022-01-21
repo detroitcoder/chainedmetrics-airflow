@@ -1,5 +1,3 @@
-from decimal import InvalidOperation
-from lib2to3.pgen2 import grammar
 import psycopg2
 import logging
 import time
@@ -37,7 +35,7 @@ def deploy_market(marketType='binary'):
     elif marketType == 'scalar':
         raise NotImplementedError("Scalar Markets are not Deployable Yet")
     else:
-        raise InvalidOperation(f'Invalid Market Type: {marketType}')
+        raise Exception(f'Invalid Market Type: {marketType}')
 
     logging.info(f'Found {len(kpi_markets_to_deploy)} markets to deploy')
 
