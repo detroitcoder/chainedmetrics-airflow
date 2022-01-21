@@ -1,4 +1,3 @@
-from decimal import InvalidOperation
 import psycopg2
 import logging
 import time
@@ -27,6 +26,8 @@ def deploy_market(marketType='binary'):
 
     #Loading the config and network after loading the config in the setup_network call
     from brownie import config, network
+    from brownie.network.transaction import TransactionReceipt
+    from brownie.network.gas.strategies import GasNowScalingStrategy
 
     logging.info(f'Deploying {marketType} market type')
     if marketType == 'binary':
@@ -34,7 +35,7 @@ def deploy_market(marketType='binary'):
     elif marketType == 'scalar':
         raise NotImplementedError("Scalar Markets are not Deployable Yet")
     else:
-        raise InvalidOperation(f'Invalid Market Type: {marketType}')
+        raise Exception(f'Invalid Market Type: {marketType}')
 
     logging.info(f'Found {len(kpi_markets_to_deploy)} markets to deploy')
 
@@ -60,7 +61,8 @@ def deploy_market(marketType='binary'):
         )
         logging.info(details)
         if marketType == 'binary':
-            broker = project.BinaryMarket.deploy(
+            broker = deploy_contract(
+                project.BinaryMarket,
                 market['strike_value'],
                 market['url'],
                 config['networks'][network.show_active()]['oracle'],
@@ -71,10 +73,10 @@ def deploy_market(marketType='binary'):
                 beat.address,
                 miss.address,
                 {'from': account},
-                publish_source=True
             )
         elif marketType == 'scalar':
-            broker = project.ScalarMarket.deploy(
+            broker = deploy_contract(
+                project.ScalarMarket,
                 market['high'],
                 market['low'],
                 market['url'],
@@ -89,8 +91,19 @@ def deploy_market(marketType='binary'):
             )
 
         logging.info("Market Created. Granting Broker Role")
-        beat.grantRole(beat.BROKER_ROLE(), broker.address, {'from': account})
-        miss.grantRole(miss.BROKER_ROLE(), broker.address, {'from': account})
+        granting_attempts = 3
+        while granting_attempts >= 0:
+            try:
+                beat.grantRole(beat.BROKER_ROLE(), broker.address, {'from': account}, gas_price=GasNowScalingStrategy(initial_speed="fast", increment=1.2))
+                miss.grantRole(miss.BROKER_ROLE(), broker.address, {'from': account}, gas_price=GasNowScalingStrategy(initial_speed="fast", increment=1.2))
+                break
+            except Exception as e:
+                logging.exception(f"Error granting permissions: {str(e)}")
+                granting_attempts -= 1
+                if granting_attempts == 0:
+                    raise
+                time.sleep(5)
+
         logging.info("Broker role is granted")
 
         logging.info("Transfering .001 LINK to the broker to pay for lookup fees")
@@ -103,7 +116,8 @@ def deploy_market(marketType='binary'):
                 link_contract.transfer(
                     broker.address, 
                     10 ** (18 - config['networks'][network.show_active()]['fee_decimals']),
-                    {'from': account}
+                    {'from': account},
+                    gas_price=GasNowScalingStrategy(max_speed="fast", increment=1.2)
                 )
                 break
             except ValueError as e:
@@ -317,16 +331,21 @@ def deploy_contract(contract, *args, retry=3):
     Handles retry logic for contract deploys up to 3 times
     '''
 
-    while retry > 0:
+    while retry >= 0:
         try:
-            instance = contract.deploy(*args)
+            instance = contract.deploy(*args, verify_source=True, gas_price=GasNowScalingStrategy(max_speed="fast", increment=1.2))
+            if isinstance(instance, TransactionReceipt):
+                logging.error(f"Contract not deployed and recieved a receipt with this info: {instance.info()}")
+                raise Exception('Recieved a Transaction Receipt Error')
             return instance
 
         except Exception as e:
-            logging.exception(f'Failed to deploy {contract} with args: {args}')
+            logging.exception(f'Failed to deploy {contract} with args: {args}\nerror={str(e)}')
             logging.info(f'Retrying retry={retry}')
             if retry == 0:
                 raise
+
+            retry -= 1
 
 def email_failure(context):
 
