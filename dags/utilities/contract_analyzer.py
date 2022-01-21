@@ -12,7 +12,6 @@ from collections import defaultdict
 DEV_DATABASE = "chainedmetrics-dev-do-user-9754357-0.b.db.ondigitalocean.com"
 PROD_DATABASE = "chainedmetrics-prod-do-user-9754357-0.b.db.ondigitalocean.com"
 MAX_DEPTH = 20
-POLYSCAN_API_KEY = "WC476C15XFJK19P3HS9UQFBYY38W4JGBFZ"
 
 def open_orders(broker):
     '''
@@ -69,10 +68,11 @@ def issued_tokens(token_address):
     '''
 
     logging.info(f'Getting Issuances for {token_address}')
+    polyscan_api_token = os.environ['POLYGONSCAN_TOKEN']
     url = (
         "https://api.polygonscan.com/api?module=account&action=tokentx&"
         f"contractaddress={token_address}&sort=asc&"
-        f"apikey={POLYSCAN_API_KEY}"
+        f"apikey={polyscan_api_token}"
     )
 
     resp = requests.get(url)
