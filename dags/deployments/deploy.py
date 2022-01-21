@@ -1,4 +1,5 @@
 from decimal import InvalidOperation
+from lib2to3.pgen2 import grammar
 import psycopg2
 import logging
 import time
@@ -27,6 +28,7 @@ def deploy_market(marketType='binary'):
 
     #Loading the config and network after loading the config in the setup_network call
     from brownie import config, network
+    from brownie.network.transaction import TransactionReceipt
 
     logging.info(f'Deploying {marketType} market type')
     if marketType == 'binary':
@@ -60,7 +62,8 @@ def deploy_market(marketType='binary'):
         )
         logging.info(details)
         if marketType == 'binary':
-            broker = project.BinaryMarket.deploy(
+            broker = deploy_contract(
+                project.BinaryMarket,
                 market['strike_value'],
                 market['url'],
                 config['networks'][network.show_active()]['oracle'],
@@ -71,10 +74,10 @@ def deploy_market(marketType='binary'):
                 beat.address,
                 miss.address,
                 {'from': account},
-                publish_source=True
             )
         elif marketType == 'scalar':
-            broker = project.ScalarMarket.deploy(
+            broker = deploy_contract(
+                project.ScalarMarket,
                 market['high'],
                 market['low'],
                 market['url'],
@@ -89,8 +92,19 @@ def deploy_market(marketType='binary'):
             )
 
         logging.info("Market Created. Granting Broker Role")
-        beat.grantRole(beat.BROKER_ROLE(), broker.address, {'from': account})
-        miss.grantRole(miss.BROKER_ROLE(), broker.address, {'from': account})
+        granting_attempts = 3
+        while granting_attempts > 0:
+            try:
+                beat.grantRole(beat.BROKER_ROLE(), broker.address, {'from': account})
+                miss.grantRole(miss.BROKER_ROLE(), broker.address, {'from': account})
+                break
+            except Exception as e:
+                logging.exception(f"Error granting permissions: {str(e)}")
+                granting_attempts -= 1
+                if granting_attempts == 0:
+                    raise
+                time.sleep(5)
+
         logging.info("Broker role is granted")
 
         logging.info("Transfering .001 LINK to the broker to pay for lookup fees")
@@ -319,11 +333,14 @@ def deploy_contract(contract, *args, retry=3):
 
     while retry > 0:
         try:
-            instance = contract.deploy(*args)
+            instance = contract.deploy(*args, verify_source=True)
+            if isinstance(instance, TransactionReceipt):
+                logging.error(f"Contract not deployed and recieved a receipt with this info: {instance.info()}")
+                raise Exception('Recieved a Transaction Receipt Error')
             return instance
 
         except Exception as e:
-            logging.exception(f'Failed to deploy {contract} with args: {args}')
+            logging.exception(f'Failed to deploy {contract} with args: {args}\nerror={str(e)}')
             logging.info(f'Retrying retry={retry}')
             if retry == 0:
                 raise
