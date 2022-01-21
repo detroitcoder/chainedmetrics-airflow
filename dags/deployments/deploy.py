@@ -9,6 +9,7 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.hooks.base import BaseHook
 from airflow.models import Variable
+from brownie.network.gas.strategies import GasNowScalingStrategy
 
 
 def deploy_market(marketType='binary'):
@@ -27,7 +28,6 @@ def deploy_market(marketType='binary'):
     #Loading the config and network after loading the config in the setup_network call
     from brownie import config, network
     from brownie.network.transaction import TransactionReceipt
-    from brownie.network.gas.strategies import GasNowScalingStrategy
 
     logging.info(f'Deploying {marketType} market type')
     if marketType == 'binary':
