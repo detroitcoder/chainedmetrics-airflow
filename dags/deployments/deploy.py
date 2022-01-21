@@ -333,7 +333,7 @@ def deploy_contract(contract, *args, retry=3):
 
     while retry >= 0:
         try:
-            instance = contract.deploy(*args, verify_source=True, gas_price=GasNowScalingStrategy(max_speed="fast", increment=1.2))
+            instance = contract.deploy(*args, publish_source=True, gas_price=GasNowScalingStrategy(max_speed="fast", increment=1.2))
             if isinstance(instance, TransactionReceipt):
                 logging.error(f"Contract not deployed and recieved a receipt with this info: {instance.info()}")
                 raise Exception('Recieved a Transaction Receipt Error')
