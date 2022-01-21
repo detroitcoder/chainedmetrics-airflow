@@ -220,7 +220,8 @@ def update_broker_addresses(markets_created):
             cur.execute(f'''
                 UPDATE market
                 SET broker_address='{broker}', beat_address='{beat}', miss_address='{miss}'
-                WHERE id={_id}
+                WHERE id={_id};
+                commit;
             ''')
 
     except Exception:
